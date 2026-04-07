@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Chesterton: Unipar Cubatão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── THEMES ─────────────────────────────────────────────── */
+    :root {
+      --transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+    }
+    html.dark {
+      --bg-primary:    #07090f;
+      --bg-secondary:  #0f1623;
+      --bg-card:       #141d2e;
+      --bg-card-hover: #1a2540;
+      --bg-input:      #0f1623;
+      --accent-gold:   #d4a843;
+      --accent-gold2:  #c49030;
+      --accent-blue:   #3b82f6;
+      --accent-green:  #22c55e;
+      --accent-orange: #f97316;
+      --accent-red:    #ef4444;
+      --accent-purple: #a855f7;
+      --text-primary:  #f1f5f9;
+      --text-secondary:#cbd5e1;
+      --text-muted:    #64748b;
+      --border:        rgba(255,255,255,0.07);
+      --border-card:   rgba(255,255,255,0.10);
+      --shadow-sm:     0 2px 8px rgba(0,0,0,0.35);
+      --shadow-md:     0 6px 24px rgba(0,0,0,0.5);
+      --shadow-lg:     0 16px 48px rgba(0,0,0,0.6);
+      --glow-gold:     0 0 40px rgba(212,168,67,0.12);
+      --login-overlay: rgba(7,9,15,0.95);
+    }
+    html.light {
+      --bg-primary:    #eef2f7;
+      --bg-secondary:  #ffffff;
+      --bg-card:       #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-input:      #f1f5f9;
+      --accent-gold:   #b8860b;
+      --accent-gold2:  #9a7009;
+      --accent-blue:   #2563eb;
+      --accent-green:  #16a34a;
+      --accent-orange: #ea580c;
+      --accent-red:    #dc2626;
+      --accent-purple: #9333ea;
+      --text-primary:  #0f172a;
+      --text-secondary:#334155;
+      --text-muted:    #94a3b8;
+      --border:        #e2e8f0;
+      --border-card:   #dde3ec;
+      --shadow-sm:     0 2px 8px rgba(0,0,0,0.06);
+      --shadow-md:     0 6px 24px rgba(0,0,0,0.09);
+      --shadow-lg:     0 16px 48px rgba(0,0,0,0.12);
+      --glow-gold:     0 0 40px rgba(184,134,11,0.08);
+      --login-overlay: rgba(238,242,247,0.97);
+    }
+
+    /* ── RESET ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: var(--transition);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; }
+    button { cursor: pointer; font-family: 'Inter', sans-serif; }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOGIN SCREEN
+    ══════════════════════════════════════════════════════════ */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+    /* animated radial bg */
+    #login-screen::before {
+      content: '';
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%,
+        rgba(212,168,67,0.10) 0%,
+        transparent 70%);
+      animation: bgPulse 10s ease-in-out infinite;
+      pointer-events: none;
+    }
+    #login-screen::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
+      animation: bgPulse 14s ease-in-out infinite reverse;
+      pointer-events: none;
+    }
+    @keyframes bgPulse {
+      0%,100% { transform: scale(1); opacity: .6; }
+      50%      { transform: scale(1.15); opacity: 1; }
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      padding: 52px 44px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: var(--shadow-lg), var(--glow-gold);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Theme toggle on login */
+    .login-theme-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .login-theme-btn:hover { color: var(--accent-gold); border-color: var(--accent-gold); }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .brand-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.06));
+      border: 1px solid rgba(212,168,67,0.35);
+      border-radius: 100px;
+      padding: 6px 18px;
+      margin-bottom: 18px;
+    }
+    .brand-chip span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .login-logo h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .login-logo p {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .divider-login {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-gold), transparent);
+      border-radius: 2px;
+      margin: 20px auto 0;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 4px rgba(212,168,67,0.12);
+    }
+    .form-group input::placeholder { color: var(--text-muted); }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold2));
+      color: #07090f;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      margin-top: 6px;
+    }
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(212,168,67,0.45);
+    }
+    .btn-login:active:not(:disabled) { transform: translateY(0); }
+    .btn-login:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .login-status {
+      margin-top: 14px;
+      font-size: 0.83rem;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+      display: none;
+    }
+    .login-status.loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+    }
+    .login-status.error {
+      display: block;
+      background: rgba(239,68,68,0.10);
+      border: 1px solid rgba(239,68,68,0.28);
+      color: var(--accent-red);
+    }
+    .login-footer-note {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .lock-icon { font-size: 0.9rem; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid var(--border-card);
+      border-top-color: var(--accent-gold);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════════════════
+       DASHBOARD
+    ══════════════════════════════════════════════════════════ */
+    #dashboard { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 66px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .topbar-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .topbar-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    /* online badge */
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.28);
+      border-radius: 100px;
+      padding: 4px 13px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #22c55e;
+      letter-spacing: 0.4px;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: blink 2.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 9px;
+      padding: 7px 16px;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-action:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 9px; padding: 7px 14px; color: var(--text-muted); font-size: 0.78rem; transition: all 0.2s; }
+    .btn-logout:hover { border-color: rgba(239,68,68,0.5); color: var(--accent-red); }
+
+    /* ── MAIN CONTENT ── */
+    .main { padding: 28px 28px 40px; max-width: 1440px; margin: 0 auto; width: 100%; }
+
+    /* user-bar */
+    .user-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 14px 22px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    .user-left { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; color: #07090f;
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); }
+    .user-sub  { font-size: 0.73rem; color: var(--text-muted); margin-top: 1px; }
+    .refresh-row {
+      font-size: 0.73rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* section label */
+    .sec-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.72rem; font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .sec-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 22px 20px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.35s;
+      cursor: default;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); background: var(--bg-card-hover); }
+    .kpi-bar {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px; border-radius: 18px 18px 0 0;
+    }
+    .kpi-bar.blue   { background: linear-gradient(90deg, var(--accent-blue), #60a5fa); }
+    .kpi-bar.gold   { background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold2)); }
+    .kpi-bar.green  { background: linear-gradient(90deg, var(--accent-green), #4ade80); }
+    .kpi-bar.orange { background: linear-gradient(90deg, var(--accent-orange), #fb923c); }
+    .kpi-bar.red    { background: linear-gradient(90deg, var(--accent-red), #f87171); }
+    .kpi-bar.purple { background: linear-gradient(90deg, var(--accent-purple), #c084fc); }
+
+    .kpi-ico  { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+    .kpi-lbl  { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); line-height: 1.35; letter-spacing: 0.2px; }
+    .kpi-val  { font-size: 2.2rem; font-weight: 900; color: var(--text-primary); line-height: 1; margin-top: 6px; }
+    .kpi-card.green  .kpi-val { color: var(--accent-green); }
+    .kpi-card.orange .kpi-val { color: var(--accent-orange); }
+    .kpi-card.red    .kpi-val { color: var(--accent-red); }
+    .kpi-card.purple .kpi-val { color: var(--accent-purple); }
+
+    /* ── TABLE ── */
+    .table-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-head-title { font-size: 0.93rem; font-weight: 700; color: var(--text-primary); }
+    .table-head-meta  { font-size: 0.73rem; color: var(--text-muted); }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead tr { background: var(--bg-secondary); }
+    .data-table th {
+      padding: 11px 18px;
+      text-align: left;
+      font-size: 0.70rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 14px 18px;
+      font-size: 0.87rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 0.80rem;
+      font-weight: 700;
+    }
+    .badge.green  { background: rgba(34,197,94,0.13);  border: 1px solid rgba(34,197,94,0.3);  color: var(--accent-green); }
+    .badge.orange { background: rgba(249,115,22,0.13); border: 1px solid rgba(249,115,22,0.3); color: var(--accent-orange); }
+    .badge.red    { background: rgba(239,68,68,0.13);  border: 1px solid rgba(239,68,68,0.3);  color: var(--accent-red); }
+    .badge.purple { background: rgba(168,85,247,0.13); border: 1px solid rgba(168,85,247,0.3); color: var(--accent-purple); }
+    .badge.neutral{ background: var(--bg-input);       border: 1px solid var(--border-card);   color: var(--text-secondary); }
+
+    /* ── POWER BI ── */
+    .pbi-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+    .pbi-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pbi-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #f2c811, #e8a000);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .pbi-title  { font-size: 0.93rem; font-weight: 700; color: var(--text-primary); }
+    .pbi-sub    { font-size: 0.72rem; color: var(--text-muted); margin-top: 1px; }
+    .pbi-iframe-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 58%;
+    }
+    .pbi-iframe-wrap iframe {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    /* ── SGA SECTION ── */
+    .sga-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 28px 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+    .sga-info h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+    .sga-info p  { font-size: 0.83rem; color: var(--text-muted); max-width: 480px; line-height: 1.55; }
+
+    .btn-sga {
+      display: inline-flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold2));
+      color: #07090f;
+      border: none;
+      border-radius: 16px;
+      padding: 16px 28px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      box-shadow: 0 6px 24px rgba(212,168,67,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .btn-sga:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 44px rgba(212,168,67,0.55);
+    }
+    .btn-sga:active { transform: translateY(-1px); }
+    .btn-sga-ico { font-size: 1.5rem; }
+    .btn-sga-texts { display: flex; flex-direction: column; align-items: flex-start; }
+    .btn-sga-texts span:first-child { font-size: 0.95rem; font-weight: 800; }
+    .btn-sga-texts span:last-child  { font-size: 0.72rem; font-weight: 500; opacity: 0.65; }
+    .btn-sga-arrow { font-size: 1.1rem; opacity: 0.7; }
+
+    /* loading / error placeholders */
+    .placeholder {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 52px;
+      font-size: 0.87rem; color: var(--text-muted);
+    }
+    .placeholder.err { color: var(--accent-red); }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 22px 28px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1400px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .topbar { padding: 0 16px; }
+      .main { padding: 16px 16px 32px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .sga-card { flex-direction: column; text-align: center; }
+      .sga-info p { max-width: 100%; }
+      .btn-sga { width: 100%; justify-content: center; }
+      .pbi-iframe-wrap { padding-top: 75%; }
+      .user-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+    @media (max-width: 520px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .login-card { padding: 36px 24px; margin: 12px; }
+      .topbar-sub, .topbar-icon { display: none; }
+    }
+    @media (max-width: 400px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     LOGIN
+══════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <!-- theme toggle -->
+    <button class="login-theme-btn" onclick="toggleTheme()" id="login-theme-btn">☀️ Modo Claro</button>
+
+    <div class="login-logo">
+      <div class="brand-chip"><span>⚙️ &nbsp;Chesterton do Brasil</span></div>
+      <h1>Portal Chesterton</h1>
+      <p>Unipar Cubatão — Gestão de Selos Mecânicos</p>
+      <div class="divider-login"></div>
+    </div>
+
+    <div class="form-group">
+      <label>E-mail de acesso</label>
+      <input type="email" id="inp-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-login" id="btn-login" onclick="handleLogin()">
+      Entrar no Portal
+    </button>
+
+    <div class="login-status loading" id="status-loading">
+      <div class="spinner"></div>
+      <span>Verificando credenciais...</span>
+    </div>
+    <div class="login-status error" id="status-error"></div>
+
+    <div class="login-footer-note">
+      <span class="lock-icon">🔒</span> Acesso restrito — Chesterton Confidencial
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════════════ -->
+<div id="dashboard">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">⚙️</div>
+      <div>
+        <div class="topbar-title">Portal Chesterton: Unipar Cubatão</div>
+        <div class="topbar-sub">Gestão de Selos Mecânicos</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span>Conectado</span>
+      </div>
+      <button class="btn-action" onclick="toggleTheme()" id="dash-theme-btn">☀️ Modo Claro</button>
+      <button class="btn-logout" onclick="handleLogout()">Sair</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- User bar -->
+    <div class="user-bar">
+      <div class="user-left">
+        <div class="avatar" id="avatar-initial">--</div>
+        <div>
+          <div class="user-name" id="display-user">—</div>
+          <div class="user-sub">Acesso Operacional · Chesterton do Brasil</div>
+        </div>
+      </div>
+      <div class="refresh-row">
+        🔄&nbsp;Atualização automática a cada 5 min &nbsp;|&nbsp; Última:&nbsp;<strong id="last-update">—</strong>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="sec-label">📊 Indicadores Operacionais — Selos Mecânicos</div>
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="placeholder" style="grid-column:1/-1"><div class="spinner"></div>Carregando indicadores…</div>
+    </div>
+
+    <!-- Table -->
+    <div class="sec-label">📋 Dados Detalhados da Planilha</div>
+    <div class="table-box">
+      <div class="table-head">
+        <span class="table-head-title">Registros de Selos Mecânicos</span>
+        <span class="table-head-meta" id="table-meta">—</span>
+      </div>
+      <div id="table-wrap">
+        <div class="placeholder"><div class="spinner"></div>Carregando registros…</div>
+      </div>
+    </div>
+
+    <!-- Power BI -->
+    <div class="sec-label">📈 Relatório Analítico — Power BI</div>
+    <div class="pbi-box">
+      <div class="pbi-header">
+        <div class="pbi-icon">📊</div>
+        <div>
+          <div class="pbi-title">Relatório Consolidado de Desempenho</div>
+          <div class="pbi-sub">Análise de selos mecânicos e ativos — Unipar Cubatão · Chesterton do Brasil</div>
+        </div>
+      </div>
+      <div class="pbi-iframe-wrap">
+        <iframe
+          id="pbi-frame"
+          src="about:blank"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation"
+          title="Relatório Power BI Chesterton Unipar Cubatão"
+        ></iframe>
+      </div>
+    </div>
+
+    <!-- SGA -->
+    <div class="sec-label">🔧 Sistema de Gestão de Ativos</div>
+    <div class="sga-card">
+      <div class="sga-info">
+        <h3>SGA — Sistema de Gestão de Ativos · Unipar Cubatão</h3>
+        <p>
+          Acesse o sistema completo para visualizar, registrar e gerenciar selos mecânicos e ativos
+          industriais em tempo real. Consulte histórico de intervenções, status de vazamentos e
+          condição operacional dos equipamentos diretamente na plataforma.
+        </p>
+      </div>
+      <a
+        class="btn-sga"
+        href="https://www.appsheet.com/start/9fa24309-6357-4b44-9023-b989bd236ca3?platform=desktop#appName=SGA-GerenciamentodeAtivos-136726047&vss=H4sIAAAAAAAAA62POw7CMBBErxJNbS7gMoECIWj4NJjCxBvJIrGj2AEiy3fH4SNEG1HujN7TbMBV023rZXkBP4bvtaIBHEFgN7QkwAUKa3xnawEmsJHNK8zn2SzbG93KLitygYh4Yh-LJwcepkj4P5YwaEXG60pTNxpHPpnedKpHNgW_JCJD03t5run5QiJjTFlly96ROqRZk-e4pVncW2nU2qokrmTtKD4AW9HbcoMBAAA=&view=BD%20-%20Unipar%20CB"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="btn-sga-ico">⚡</span>
+        <div class="btn-sga-texts">
+          <span>Abrir SGA</span>
+          <span>Sistema de Gestão de Ativos</span>
+        </div>
+        <span class="btn-sga-arrow">→</span>
+      </a>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    Chesterton do Brasil — Portal Unipar Cubatão &nbsp;·&nbsp; Todos os direitos reservados &nbsp;·&nbsp; Uso interno restrito
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── CONFIG ──────────────────────────────────────────────────── */
+const CFG = {
+  LOGIN_URL : 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1731PjXn-Isww5FCyVml2Yq8D0QGv7Z96VIYJfQ8RVkURa00ukOzLNWlvcGOWAnM8Ku7onrORE0sT/pub?gid=177019262&single=true&output=csv',
+  DATA_URL  : 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQFzoOuSxg_71y_F8WhPoZDDpi8uv_AyebADU9COcl6APHKipItQLQ5tM_drPssl5tgQwIWXjNo4bV/pub?gid=1439082768&single=true&output=csv',
+  PBI_URL   : 'https://app.powerbi.com/view?r=eyJrIjoiOWVjYmIxOGItNjQwOS00NDUxLWExZGQtNDFjOWJlM2Q0YzE3IiwidCI6ImYwMGQ1YzkwLTE2ZmQtNGUwNi1iY2Q2LWJmM2Y2MjEzNjVhMCJ9&pageName=ReportSection55b16bf6edd2ab07b729',
+  REFRESH_MS: 5 * 60 * 1000,
+  COLS      : [
+    'Quantidade de Equipamentos',
+    'Quantidade de Intervenções',
+    'Selo Mecânico com operação Normal',
+    'Selo Mecânico Vazamento',
+    'Selo Mecânico Fora de Operação',
+    'Problema em componentes periféricos ao selo',
+  ]
+};
+
+/* ── STATE ───────────────────────────────────────────────────── */
+const S = { theme: 'dark', user: null, timer: null };
+
+/* ── THEME ───────────────────────────────────────────────────── */
+function applyTheme(t) {
+  S.theme = t;
+  document.documentElement.className = t;
+  const label = t === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+  const lBtn = document.getElementById('login-theme-btn');
+  const dBtn = document.getElementById('dash-theme-btn');
+  if (lBtn) lBtn.innerHTML = label;
+  if (dBtn) dBtn.innerHTML = label;
+  try { localStorage.setItem('chesterton-portal-theme', t); } catch(e) {}
+}
+function toggleTheme() { applyTheme(S.theme === 'dark' ? 'light' : 'dark'); }
+(function initTheme() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('chesterton-portal-theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+})();
+
+/* ── CSV PARSER ──────────────────────────────────────────────── */
+function parseCSV(raw) {
+  const lines = raw.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  function splitLine(line) {
+    const out = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
+  const headers = splitLine(lines[0]);
+  return lines.slice(1)
+    .filter(l => l.trim())
+    .map(l => {
+      const vals = splitLine(l);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = vals[i] !== undefined ? vals[i] : ''; });
+      return obj;
+    });
+}
+
+/* ── FETCH CSV ───────────────────────────────────────────────── */
+async function fetchCSV(url) {
+  const r = await fetch(url + '&_t=' + Date.now());
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return parseCSV(await r.text());
+}
+
+/* ── LOGIN ───────────────────────────────────────────────────── */
+async function handleLogin() {
+  const email = (document.getElementById('inp-email').value || '').trim();
+  const pass  = (document.getElementById('inp-pass').value  || '').trim();
+  const btnEl = document.getElementById('btn-login');
+  const loadEl = document.getElementById('status-loading');
+  const errEl  = document.getElementById('status-error');
+
+  errEl.style.display  = 'none';
+  loadEl.style.display = '';
+
+  if (!email || !pass) {
+    loadEl.style.display = 'none';
+    errEl.textContent = 'Preencha e-mail e senha para continuar.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btnEl.disabled = true;
+  loadEl.classList.add('loading');
+
+  try {
+    const users = await fetchCSV(CFG.LOGIN_URL);
+    const match = users.find(u => {
+      const login = (u['Login'] || u['login'] || u['E-mail'] || u['Email'] || u['EMAIL'] || '').trim().toLowerCase();
+      const senha = (u['Senha'] || u['senha'] || u['SENHA'] || u['Password'] || '').trim();
+      return login === email.toLowerCase() && senha === pass;
+    });
+
+    if (match) {
+      S.user = match;
+      onLoginSuccess(email);
+    } else {
+      errEl.textContent = '⚠️ E-mail ou senha incorretos. Verifique suas credenciais.';
+      errEl.style.display = 'block';
+    }
+  } catch(err) {
+    console.error(err);
+    errEl.textContent = '⚠️ Não foi possível verificar o acesso. Verifique sua conexão e tente novamente.';
+    errEl.style.display = 'block';
+  } finally {
+    btnEl.disabled = false;
+    loadEl.style.display = 'none';
+  }
+}
+
+function onLoginSuccess(email) {
+  const init = email.charAt(0).toUpperCase();
+  document.getElementById('avatar-initial').textContent = init;
+  document.getElementById('display-user').textContent   = email;
+
+  document.getElementById('login-screen').style.display = 'none';
+  const dash = document.getElementById('dashboard');
+  dash.style.display = 'flex';
+  dash.style.flexDirection = 'column';
+
+  setTimeout(() => {
+    document.getElementById('pbi-frame').src = CFG.PBI_URL;
+  }, 400);
+
+  loadData();
+  S.timer = setInterval(loadData, CFG.REFRESH_MS);
+}
+
+function handleLogout() {
+  if (S.timer) { clearInterval(S.timer); S.timer = null; }
+  S.user = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display    = 'none';
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-pass').value  = '';
+  document.getElementById('status-error').style.display = 'none';
+  document.getElementById('pbi-frame').src = 'about:blank';
+}
+
+/* ── DATA ────────────────────────────────────────────────────── */
+async function loadData() {
+  try {
+    const rows = await fetchCSV(CFG.DATA_URL);
+    renderKPIs(rows);
+    renderTable(rows);
+    const now = new Date();
+    document.getElementById('last-update').textContent =
+      now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch(err) {
+    console.error('Erro ao carregar dados:', err);
+    document.getElementById('kpi-grid').innerHTML =
+      '<div class="placeholder err" style="grid-column:1/-1">⚠️ Erro ao carregar dados. Tentando na próxima atualização…</div>';
+  }
+}
+
+/* ── KPIs ────────────────────────────────────────────────────── */
+function numVal(v) {
+  return parseFloat(String(v||'0').replace(/[^\d.-]/g,'')) || 0;
+}
+function fmt(n) {
+  const r = Math.round(n);
+  return r.toLocaleString('pt-BR');
+}
+
+function renderKPIs(rows) {
+  // Lê SOMENTE a primeira linha (totais consolidados)
+  const firstRow = rows[0] || {};
+  const tot = {};
+  CFG.COLS.forEach(c => { tot[c] = numVal(firstRow[c]); });
+
+  const cards = [
+    { key:'Quantidade de Equipamentos',                    ico:'🏭', lbl:'Equipamentos',                       color:'blue'   },
+    { key:'Quantidade de Intervenções',                    ico:'🔧', lbl:'Intervenções',                       color:'gold'   },
+    { key:'Selo Mecânico com operação Normal',             ico:'✅', lbl:'Operação Normal',                    color:'green'  },
+    { key:'Selo Mecânico Vazamento',                       ico:'💧', lbl:'Vazamento',                          color:'orange' },
+    { key:'Selo Mecânico Fora de Operação',                ico:'🚫', lbl:'Fora de Operação',                   color:'red'    },
+    { key:'Problema em componentes periféricos ao selo',   ico:'⚠️', lbl:'Prob. Componentes Periféricos',      color:'purple' },
+  ];
+
+  document.getElementById('kpi-grid').innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.color}">
+      <div class="kpi-bar ${c.color}"></div>
+      <span class="kpi-ico">${c.ico}</span>
+      <div class="kpi-lbl">${c.lbl}</div>
+      <div class="kpi-val">${fmt(tot[c.key] || 0)}</div>
+    </div>
+  `).join('');
+}
+
+/* ── TABLE ───────────────────────────────────────────────────── */
+function colBadge(col, val) {
+  if (col === 'Selo Mecânico com operação Normal')           return `<span class="badge green">✅ ${val}</span>`;
+  if (col === 'Selo Mecânico Vazamento')                     return `<span class="badge orange">💧 ${val}</span>`;
+  if (col === 'Selo Mecânico Fora de Operação')              return `<span class="badge red">🚫 ${val}</span>`;
+  if (col === 'Problema em componentes periféricos ao selo') return `<span class="badge purple">⚠️ ${val}</span>`;
+  return `<span class="badge neutral">${val !== '' ? val : '—'}</span>`;
+}
+
+function renderTable(rows) {
+  if (!rows.length) {
+    document.getElementById('table-wrap').innerHTML =
+      '<div class="placeholder">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  document.getElementById('table-meta').textContent = `${rows.length} registro(s)`;
+
+  const thead = `<tr>${CFG.COLS.map(c => `<th>${c}</th>`).join('')}</tr>`;
+  const tbody = rows.map(r =>
+    `<tr>${CFG.COLS.map(c => `<td>${colBadge(c, r[c] ?? '—')}</td>`).join('')}</tr>`
+  ).join('');
+
+  document.getElementById('table-wrap').innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ── ENTER KEY ───────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+    handleLogin();
+  }
+});
+</script>
+</body>
+</html>
