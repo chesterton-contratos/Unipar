@@ -367,55 +367,94 @@
       margin: 18px 0;
     }
 
-    /* QR Code setup area */
-    .totp-setup-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: color 0.2s;
-      padding: 8px;
-      border-radius: 8px;
-      user-select: none;
-    }
-    .totp-setup-toggle:hover { color: var(--accent-gold); }
-    .totp-setup-toggle .arrow-ico { transition: transform 0.25s; font-size: 0.7rem; }
-    .totp-setup-toggle.open .arrow-ico { transform: rotate(180deg); }
-
-    .totp-qr-panel {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease, opacity 0.3s ease;
-      opacity: 0;
-    }
-    .totp-qr-panel.open {
-      max-height: 400px;
-      opacity: 1;
-    }
-    .totp-qr-inner {
+    /* QR Code — bloco principal, sempre visível */
+    .totp-qr-main {
       background: var(--bg-secondary);
       border: 1px solid var(--border-card);
-      border-radius: 14px;
-      padding: 20px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .totp-qr-inner p {
-      font-size: 0.76rem;
-      color: var(--text-muted);
+      border-radius: 16px;
+      padding: 18px;
       margin-bottom: 14px;
-      line-height: 1.5;
+      transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+    }
+    .totp-qr-main.hidden {
+      max-height: 0 !important;
+      padding: 0 18px;
+      opacity: 0;
+      pointer-events: none;
+      margin-bottom: 0;
+    }
+
+    /* Passos de instrução */
+    .totp-qr-steps {
+      margin-bottom: 14px;
+    }
+    .qr-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      padding: 4px 0;
+      line-height: 1.4;
+    }
+    .qr-step-num {
+      width: 22px; height: 22px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold2));
+      color: #07090f;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* QR frame */
+    .qr-frame {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
     }
     #qrcode-canvas {
       display: inline-block;
-      background: #fff;
-      border-radius: 10px;
+      background: #ffffff;
+      border-radius: 12px;
       padding: 10px;
-      margin-bottom: 14px;
+      box-shadow: 0 0 0 4px rgba(212,168,67,0.25);
+    }
+
+    /* Row "já configurei" */
+    .totp-already-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .qr-hide-btn {
+      background: none;
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .qr-hide-btn:hover { color: var(--accent-gold); border-color: var(--accent-gold); }
+
+    /* Label "Digite o código" */
+    .totp-code-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.80rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
     }
     .totp-secret-box {
       background: var(--bg-input);
@@ -883,23 +922,53 @@
 
     <!-- ─── STEP 2 — VERIFICAÇÃO 2FA / TOTP ─── -->
     <div id="step-2">
+
       <div class="totp-header">
         <div class="totp-step-badge">🔐 &nbsp;Etapa 2 de 2 — Verificação</div>
         <div class="totp-shield-wrap">🛡️</div>
         <h3>Autenticação em Duas Etapas</h3>
-        <p>Abra seu aplicativo autenticador e<br>digite o código de 6 dígitos gerado</p>
       </div>
 
-      <!-- Timer ring -->
-      <div class="totp-timer-row">
-        <div class="totp-timer-ring">
-          <svg class="timer-svg" viewBox="0 0 24 24" width="28" height="28">
-            <circle class="timer-track" cx="12" cy="12" r="11"/>
-            <circle class="timer-fill" id="timer-circle" cx="12" cy="12" r="11"/>
-          </svg>
-          <div class="timer-label" id="timer-label">30</div>
+      <!-- QR CODE — sempre visível, é o foco principal -->
+      <div class="totp-qr-main" id="totp-qr-main">
+        <div class="totp-qr-steps">
+          <div class="qr-step"><span class="qr-step-num">1</span><span>Abra o <strong>Google Authenticator</strong> no celular</span></div>
+          <div class="qr-step"><span class="qr-step-num">2</span><span>Toque em <strong>+</strong> → <strong>Ler código QR</strong></span></div>
+          <div class="qr-step"><span class="qr-step-num">3</span><span>Aponte a câmera para o código abaixo</span></div>
         </div>
-        <span id="timer-text">O código renova em <strong id="timer-secs">30</strong>s</span>
+        <div class="qr-frame">
+          <div id="qrcode-canvas"></div>
+        </div>
+        <div class="totp-secret-box">
+          <strong>Chave manual (se não conseguir escanear)</strong>
+          <span class="totp-secret-key" id="totp-secret-display">—</span>
+          <button class="copy-btn" onclick="copySecret()" title="Copiar chave">📋 Copiar</button>
+        </div>
+      </div>
+
+      <hr class="totp-divider">
+
+      <!-- Modo "já configurei" - link para ocultar QR -->
+      <div class="totp-already-row">
+        <span id="qr-toggle-label">✅ Já escaneei — ocultar QR Code</span>
+        <button class="qr-hide-btn" id="qr-hide-btn" onclick="toggleQRVisibility()">Ocultar</button>
+      </div>
+
+      <hr class="totp-divider">
+
+      <!-- Timer + instrução de código -->
+      <div class="totp-code-label">
+        <span>Digite o código de 6 dígitos do app:</span>
+        <div class="totp-timer-row">
+          <div class="totp-timer-ring">
+            <svg class="timer-svg" viewBox="0 0 24 24" width="28" height="28">
+              <circle class="timer-track" cx="12" cy="12" r="11"/>
+              <circle class="timer-fill" id="timer-circle" cx="12" cy="12" r="11"/>
+            </svg>
+            <div class="timer-label" id="timer-label">30</div>
+          </div>
+          <span>renova em <strong id="timer-secs">30</strong>s</span>
+        </div>
       </div>
 
       <!-- 6 digit boxes -->
@@ -913,7 +982,7 @@
       </div>
 
       <button class="btn-login" id="btn-totp" onclick="handleTOTPVerify()" disabled>
-        Verificar Código
+        ✔ Verificar e Entrar
       </button>
 
       <div class="login-status loading" id="status-totp-loading">
@@ -921,26 +990,6 @@
         <span>Verificando código...</span>
       </div>
       <div class="login-status error" id="status-totp-error"></div>
-
-      <hr class="totp-divider">
-
-      <!-- QR Code Setup (collapsible) -->
-      <div class="totp-setup-toggle" id="totp-setup-toggle" onclick="toggleQRSetup()">
-        <span>📱 Configurar o Authenticator pela primeira vez</span>
-        <span class="arrow-ico">▼</span>
-      </div>
-      <div class="totp-qr-panel" id="totp-qr-panel">
-        <div class="totp-qr-inner">
-          <p>Escaneie o QR Code abaixo com <strong>Google Authenticator</strong>, <strong>Authy</strong> ou <strong>Microsoft Authenticator</strong></p>
-          <div id="qrcode-canvas"></div>
-          <div class="totp-secret-box">
-            <strong>Chave manual (se não conseguir escanear)</strong>
-            <span class="totp-secret-key" id="totp-secret-display">—</span>
-            <button class="copy-btn" onclick="copySecret()" title="Copiar chave">📋 Copiar</button>
-          </div>
-          <p style="font-size:0.70rem;margin-top:10px;color:var(--text-muted)">⚠️ Guarde esta chave em local seguro — ela só é exibida uma vez por acesso</p>
-        </div>
-      </div>
 
       <button class="btn-back-step" onclick="backToStep1()">
         ← Voltar para o login
@@ -1153,10 +1202,46 @@ async function fetchCSV(url) {
    TOTP ENGINE — Pure JS, WebCrypto API (RFC 6238)
 ══════════════════════════════════════════════════════════════ */
 
+/* ── Detecta se string é HEX válido ────────────────────────── */
+function isHexSecret(s) {
+  return /^[0-9a-fA-F]+$/.test(s) && s.length % 2 === 0;
+}
+
+/* ── Converte bytes (Uint8Array) para Base32 ────────────────── */
+function bytesToBase32(bytes) {
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for (const b of bytes) bits += b.toString(2).padStart(8, '0');
+  while (bits.length % 5 !== 0) bits += '0';
+  let result = '';
+  for (let i = 0; i < bits.length; i += 5) {
+    result += CHARS[parseInt(bits.slice(i, i + 5), 2)];
+  }
+  return result;
+}
+
+/**
+ * Normaliza qualquer formato de secret para Base32 puro.
+ * Aceita: Base32 (padrão TOTP), HEX (0-9 a-f).
+ * Isso permite usar secrets gerados em HEX diretamente na planilha.
+ */
+function normalizeToBase32(secret) {
+  const s = secret.trim().replace(/[\s=]/g, '');
+  if (isHexSecret(s)) {
+    // HEX → bytes → Base32
+    const bytes = [];
+    for (let i = 0; i < s.length; i += 2) {
+      bytes.push(parseInt(s.slice(i, i + 2), 16));
+    }
+    return bytesToBase32(new Uint8Array(bytes));
+  }
+  return s.toUpperCase(); // Já é Base32
+}
+
 /** Decodifica Base32 para Uint8Array */
 function base32Decode(secret) {
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  const s = secret.toUpperCase().replace(/[\s=]/g, '');
+  const s = normalizeToBase32(secret); // ← normaliza antes de decodificar
   let bits = '';
   for (const c of s) {
     const idx = CHARS.indexOf(c);
@@ -1305,44 +1390,60 @@ function shakeDigits() {
 let _qrGenerated = false;
 
 function buildOTPAuthURI(secret, email) {
-  const label  = encodeURIComponent('Portal Chesterton:' + email);
-  const issuer = encodeURIComponent('Chesterton do Brasil');
-  return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+  const base32  = normalizeToBase32(secret); // ← garante Base32 no URI
+  const label   = encodeURIComponent('Portal Chesterton:' + email);
+  const issuer  = encodeURIComponent('Chesterton do Brasil');
+  return `otpauth://totp/${label}?secret=${base32}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
 }
 
 function renderQRCode(secret, email) {
-  if (_qrGenerated) return;
   _qrGenerated = true;
   const container = document.getElementById('qrcode-canvas');
+  if (!container) return;
   container.innerHTML = '';
+
+  const base32 = normalizeToBase32(secret);
+
   try {
     new QRCode(container, {
-      text  : buildOTPAuthURI(secret, email),
-      width : 176, height: 176,
-      colorDark : '#000000', colorLight: '#ffffff',
+      text        : buildOTPAuthURI(secret, email),
+      width       : 180,
+      height      : 180,
+      colorDark   : '#000000',
+      colorLight  : '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
   } catch(e) {
-    container.innerHTML = '<p style="color:var(--accent-red);font-size:0.75rem">Erro ao gerar QR Code. Use a chave manual.</p>';
+    container.innerHTML = `<p style="color:var(--accent-red);font-size:0.75rem;padding:12px">
+      ⚠️ Erro ao gerar QR Code.<br>Use a chave manual abaixo.
+    </p>`;
   }
-  // Exibir chave formatada em grupos de 4
+
+  // Exibir a chave Base32 normalizada em grupos de 4 (mais legível)
   const disp = document.getElementById('totp-secret-display');
   if (disp) {
-    disp.textContent = (secret.match(/.{1,4}/g) || []).join(' ');
-    disp.dataset.raw = secret;
+    disp.textContent = (base32.match(/.{1,4}/g) || []).join(' ');
+    disp.dataset.raw = base32;
   }
 }
 
-function toggleQRSetup() {
-  const panel  = document.getElementById('totp-qr-panel');
-  const toggle = document.getElementById('totp-setup-toggle');
-  const isOpen = panel.classList.contains('open');
-  panel.classList.toggle('open', !isOpen);
-  toggle.classList.toggle('open', !isOpen);
+/* toggleQRSetup foi substituído por toggleQRVisibility abaixo */
+function toggleQRSetup() { toggleQRVisibility(); }
 
-  // Gerar QR Code ao abrir pela primeira vez
-  if (!isOpen && S.pendingTOTPSecret && S.pendingEmail) {
-    renderQRCode(S.pendingTOTPSecret, S.pendingEmail);
+let _qrVisible = true;
+function toggleQRVisibility() {
+  _qrVisible = !_qrVisible;
+  const panel = document.getElementById('totp-qr-main');
+  const btn   = document.getElementById('qr-hide-btn');
+  const lbl   = document.getElementById('qr-toggle-label');
+  if (!panel) return;
+  panel.classList.toggle('hidden', !_qrVisible);
+  if (_qrVisible) {
+    btn.textContent = 'Ocultar';
+    lbl.textContent = '✅ Já escaneei — ocultar QR Code';
+  } else {
+    btn.textContent = 'Mostrar';
+    lbl.textContent = '📱 Mostrar QR Code novamente';
   }
 }
 
@@ -1363,21 +1464,29 @@ function showStep2(email, totpSecret) {
   S.pendingEmail       = email;
   S.pendingTOTPSecret  = totpSecret;
   _qrGenerated = false;
+  _qrVisible   = true;
 
   document.getElementById('step-1').style.display = 'none';
   document.getElementById('step-2').style.display = 'block';
-  document.getElementById('status-totp-error').style.display  = 'none';
+  document.getElementById('status-totp-error').style.display   = 'none';
   document.getElementById('status-totp-loading').style.display = 'none';
 
-  // Fechar painel QR se estava aberto
-  document.getElementById('totp-qr-panel').classList.remove('open');
-  document.getElementById('totp-setup-toggle').classList.remove('open');
+  // Restaurar QR visível
+  const panel = document.getElementById('totp-qr-main');
+  if (panel) panel.classList.remove('hidden');
+  const btn = document.getElementById('qr-hide-btn');
+  const lbl = document.getElementById('qr-toggle-label');
+  if (btn) btn.textContent = 'Ocultar';
+  if (lbl) lbl.textContent = '✅ Já escaneei — ocultar QR Code';
 
   clearDigits();
   startTOTPTimer();
 
-  // Focar no primeiro dígito após pequeno delay (UX)
-  setTimeout(() => { document.getElementById('td0').focus(); }, 200);
+  // Gerar QR Code imediatamente (não precisa clicar)
+  renderQRCode(totpSecret, email);
+
+  // Focar no primeiro dígito após o QR renderizar
+  setTimeout(() => { document.getElementById('td0').focus(); }, 300);
 }
 
 function backToStep1() {
