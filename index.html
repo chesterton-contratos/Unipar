@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Chesterton: Unipar Cubatão</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     /* ── THEMES ─────────────────────────────────────────────── */
     :root {
@@ -261,6 +262,248 @@
       line-height: 1.6;
     }
     .lock-icon { font-size: 0.9rem; }
+
+    /* ═══════════════════════════════════════════════════════════
+       2FA / STEP 2 — TOTP VERIFICATION
+    ══════════════════════════════════════════════════════════ */
+    #step-1, #step-2 {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #step-2 { display: none; }
+
+    .totp-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .totp-shield-wrap {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, rgba(212,168,67,0.20), rgba(212,168,67,0.06));
+      border: 1.5px solid rgba(212,168,67,0.35);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 16px;
+      animation: shieldPulse 3s ease-in-out infinite;
+    }
+    @keyframes shieldPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(212,168,67,0.25); }
+      50%      { box-shadow: 0 0 0 12px rgba(212,168,67,0); }
+    }
+    .totp-header h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      margin-bottom: 6px;
+    }
+    .totp-header p {
+      font-size: 0.80rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .totp-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(212,168,67,0.10);
+      border: 1px solid rgba(212,168,67,0.25);
+      border-radius: 100px;
+      padding: 3px 12px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* 6-digit TOTP input boxes */
+    .totp-digits-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+    .totp-digit {
+      width: 48px; height: 58px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 1.55rem;
+      font-weight: 700;
+      text-align: center;
+      font-family: 'Inter', monospace;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      caret-color: var(--accent-gold);
+      -moz-appearance: textfield;
+    }
+    .totp-digit::-webkit-inner-spin-button,
+    .totp-digit::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .totp-digit:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 4px rgba(212,168,67,0.15);
+      transform: translateY(-2px);
+    }
+    .totp-digit.filled {
+      border-color: rgba(212,168,67,0.55);
+      background: rgba(212,168,67,0.06);
+    }
+    .totp-digit.error-shake {
+      animation: shake 0.4s ease;
+      border-color: var(--accent-red) !important;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-5px); }
+      40%,80%  { transform: translateX(5px); }
+    }
+
+    /* Divider in login card */
+    .totp-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 18px 0;
+    }
+
+    /* QR Code setup area */
+    .totp-setup-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.2s;
+      padding: 8px;
+      border-radius: 8px;
+      user-select: none;
+    }
+    .totp-setup-toggle:hover { color: var(--accent-gold); }
+    .totp-setup-toggle .arrow-ico { transition: transform 0.25s; font-size: 0.7rem; }
+    .totp-setup-toggle.open .arrow-ico { transform: rotate(180deg); }
+
+    .totp-qr-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .totp-qr-panel.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+    .totp-qr-inner {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .totp-qr-inner p {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    #qrcode-canvas {
+      display: inline-block;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+    .totp-secret-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      word-break: break-all;
+      margin-top: 6px;
+    }
+    .totp-secret-box strong {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .totp-secret-key {
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 2px;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-left: 8px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { color: var(--accent-gold); background: rgba(212,168,67,0.1); }
+
+    /* Back button */
+    .btn-back-step {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .btn-back-step:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-gold);
+      background: rgba(212,168,67,0.06);
+    }
+
+    /* Timer ring */
+    .totp-timer-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .totp-timer-ring {
+      width: 28px; height: 28px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .timer-svg { transform: rotate(-90deg); }
+    .timer-track { fill: none; stroke: var(--border-card); stroke-width: 3; }
+    .timer-fill  { fill: none; stroke: var(--accent-gold); stroke-width: 3;
+                   stroke-dasharray: 69.11; stroke-linecap: round;
+                   transition: stroke-dashoffset 1s linear; }
+    .timer-label {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 800;
+      color: var(--accent-gold);
+    }
 
     /* ── Spinner ── */
     .spinner {
@@ -612,27 +855,96 @@
       <div class="divider-login"></div>
     </div>
 
-    <div class="form-group">
-      <label>E-mail de acesso</label>
-      <input type="email" id="inp-email" placeholder="seu@email.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
+    <!-- ─── STEP 1 — E-MAIL + SENHA ─── -->
+    <div id="step-1">
+      <div class="form-group">
+        <label>E-mail de acesso</label>
+        <input type="email" id="inp-email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn-login" id="btn-login" onclick="handleLogin()">
+        Entrar no Portal
+      </button>
+
+      <div class="login-status loading" id="status-loading">
+        <div class="spinner"></div>
+        <span>Verificando credenciais...</span>
+      </div>
+      <div class="login-status error" id="status-error"></div>
+
+      <div class="login-footer-note">
+        <span class="lock-icon">🔒</span> Acesso restrito — Chesterton Confidencial
+      </div>
     </div>
 
-    <button class="btn-login" id="btn-login" onclick="handleLogin()">
-      Entrar no Portal
-    </button>
+    <!-- ─── STEP 2 — VERIFICAÇÃO 2FA / TOTP ─── -->
+    <div id="step-2">
+      <div class="totp-header">
+        <div class="totp-step-badge">🔐 &nbsp;Etapa 2 de 2 — Verificação</div>
+        <div class="totp-shield-wrap">🛡️</div>
+        <h3>Autenticação em Duas Etapas</h3>
+        <p>Abra seu aplicativo autenticador e<br>digite o código de 6 dígitos gerado</p>
+      </div>
 
-    <div class="login-status loading" id="status-loading">
-      <div class="spinner"></div>
-      <span>Verificando credenciais...</span>
-    </div>
-    <div class="login-status error" id="status-error"></div>
+      <!-- Timer ring -->
+      <div class="totp-timer-row">
+        <div class="totp-timer-ring">
+          <svg class="timer-svg" viewBox="0 0 24 24" width="28" height="28">
+            <circle class="timer-track" cx="12" cy="12" r="11"/>
+            <circle class="timer-fill" id="timer-circle" cx="12" cy="12" r="11"/>
+          </svg>
+          <div class="timer-label" id="timer-label">30</div>
+        </div>
+        <span id="timer-text">O código renova em <strong id="timer-secs">30</strong>s</span>
+      </div>
 
-    <div class="login-footer-note">
-      <span class="lock-icon">🔒</span> Acesso restrito — Chesterton Confidencial
+      <!-- 6 digit boxes -->
+      <div class="totp-digits-row" id="totp-digits-row">
+        <input class="totp-digit" id="td0" type="number" min="0" max="9" maxlength="1" inputmode="numeric" autocomplete="one-time-code" placeholder="·" oninput="digitInput(this,0)" onkeydown="digitKeyDown(event,0)" onfocus="this.select()">
+        <input class="totp-digit" id="td1" type="number" min="0" max="9" maxlength="1" inputmode="numeric" placeholder="·" oninput="digitInput(this,1)" onkeydown="digitKeyDown(event,1)" onfocus="this.select()">
+        <input class="totp-digit" id="td2" type="number" min="0" max="9" maxlength="1" inputmode="numeric" placeholder="·" oninput="digitInput(this,2)" onkeydown="digitKeyDown(event,2)" onfocus="this.select()">
+        <input class="totp-digit" id="td3" type="number" min="0" max="9" maxlength="1" inputmode="numeric" placeholder="·" oninput="digitInput(this,3)" onkeydown="digitKeyDown(event,3)" onfocus="this.select()">
+        <input class="totp-digit" id="td4" type="number" min="0" max="9" maxlength="1" inputmode="numeric" placeholder="·" oninput="digitInput(this,4)" onkeydown="digitKeyDown(event,4)" onfocus="this.select()">
+        <input class="totp-digit" id="td5" type="number" min="0" max="9" maxlength="1" inputmode="numeric" placeholder="·" oninput="digitInput(this,5)" onkeydown="digitKeyDown(event,5)" onfocus="this.select()">
+      </div>
+
+      <button class="btn-login" id="btn-totp" onclick="handleTOTPVerify()" disabled>
+        Verificar Código
+      </button>
+
+      <div class="login-status loading" id="status-totp-loading">
+        <div class="spinner"></div>
+        <span>Verificando código...</span>
+      </div>
+      <div class="login-status error" id="status-totp-error"></div>
+
+      <hr class="totp-divider">
+
+      <!-- QR Code Setup (collapsible) -->
+      <div class="totp-setup-toggle" id="totp-setup-toggle" onclick="toggleQRSetup()">
+        <span>📱 Configurar o Authenticator pela primeira vez</span>
+        <span class="arrow-ico">▼</span>
+      </div>
+      <div class="totp-qr-panel" id="totp-qr-panel">
+        <div class="totp-qr-inner">
+          <p>Escaneie o QR Code abaixo com <strong>Google Authenticator</strong>, <strong>Authy</strong> ou <strong>Microsoft Authenticator</strong></p>
+          <div id="qrcode-canvas"></div>
+          <div class="totp-secret-box">
+            <strong>Chave manual (se não conseguir escanear)</strong>
+            <span class="totp-secret-key" id="totp-secret-display">—</span>
+            <button class="copy-btn" onclick="copySecret()" title="Copiar chave">📋 Copiar</button>
+          </div>
+          <p style="font-size:0.70rem;margin-top:10px;color:var(--text-muted)">⚠️ Guarde esta chave em local seguro — ela só é exibida uma vez por acesso</p>
+        </div>
+      </div>
+
+      <button class="btn-back-step" onclick="backToStep1()">
+        ← Voltar para o login
+      </button>
     </div>
   </div>
 </div>
@@ -773,7 +1085,13 @@ const CFG = {
 };
 
 /* ── STATE ───────────────────────────────────────────────────── */
-const S = { theme: 'dark', user: null, timer: null };
+const S = {
+  theme: 'dark',
+  user: null,
+  timer: null,
+  pendingEmail: null,       // email aguardando confirmação 2FA
+  pendingTOTPSecret: null   // secret TOTP da etapa 2
+};
 
 /* ── THEME ───────────────────────────────────────────────────── */
 function applyTheme(t) {
@@ -831,6 +1149,246 @@ async function fetchCSV(url) {
   return parseCSV(await r.text());
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TOTP ENGINE — Pure JS, WebCrypto API (RFC 6238)
+══════════════════════════════════════════════════════════════ */
+
+/** Decodifica Base32 para Uint8Array */
+function base32Decode(secret) {
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const s = secret.toUpperCase().replace(/[\s=]/g, '');
+  let bits = '';
+  for (const c of s) {
+    const idx = CHARS.indexOf(c);
+    if (idx === -1) continue;
+    bits += idx.toString(2).padStart(5, '0');
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  }
+  return new Uint8Array(bytes);
+}
+
+/** Gera código TOTP de 6 dígitos para um dado counter */
+async function generateTOTP(keyBytes, counter) {
+  const key = await crypto.subtle.importKey(
+    'raw', keyBytes,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false, ['sign']
+  );
+  const buf = new ArrayBuffer(8);
+  new DataView(buf).setUint32(4, counter >>> 0, false);
+  const sig  = new Uint8Array(await crypto.subtle.sign('HMAC', key, buf));
+  const off  = sig[19] & 0x0f;
+  const code = (
+    ((sig[off]   & 0x7f) << 24) |
+    ((sig[off+1] & 0xff) << 16) |
+    ((sig[off+2] & 0xff) <<  8) |
+     (sig[off+3] & 0xff)
+  ) % 1_000_000;
+  return String(code).padStart(6, '0');
+}
+
+/** Verifica o token do usuário (±1 janela de 30s para clock drift) */
+async function verifyTOTP(base32Secret, userToken) {
+  const token = userToken.replace(/\s/g, '');
+  if (!/^\d{6}$/.test(token)) return false;
+  const keyBytes = base32Decode(base32Secret);
+  const counter  = Math.floor(Date.now() / 1000 / 30);
+  for (const delta of [-1, 0, 1]) {
+    if (await generateTOTP(keyBytes, counter + delta) === token) return true;
+  }
+  return false;
+}
+
+/* ── TOTP TIMER (countdown ring) ────────────────────────────── */
+let _timerInterval = null;
+
+function startTOTPTimer() {
+  stopTOTPTimer();
+  const CIRC = 2 * Math.PI * 11; // r=11 → circunferência ≈ 69.1
+
+  function tick() {
+    const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
+    const secsEl  = document.getElementById('timer-secs');
+    const labelEl = document.getElementById('timer-label');
+    const circEl  = document.getElementById('timer-circle');
+    if (!secsEl) return;
+    secsEl.textContent  = remaining;
+    labelEl.textContent = remaining;
+    circEl.style.strokeDashoffset = CIRC * (1 - remaining / 30);
+    // Cor vira vermelha nos últimos 5s
+    circEl.style.stroke = remaining <= 5 ? 'var(--accent-red)' : 'var(--accent-gold)';
+    if (remaining <= 5) labelEl.style.color = 'var(--accent-red)';
+    else labelEl.style.color = 'var(--accent-gold)';
+  }
+  tick();
+  _timerInterval = setInterval(tick, 1000);
+}
+function stopTOTPTimer() {
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+}
+
+/* ── DIGIT INPUT UX ─────────────────────────────────────────── */
+function digitInput(el, idx) {
+  // Manter só o último dígito digitado
+  let v = el.value.replace(/\D/g, '');
+  if (v.length > 1) v = v.slice(-1);
+  el.value = v;
+  el.classList.toggle('filled', v !== '');
+
+  if (v && idx < 5) {
+    document.getElementById('td' + (idx + 1)).focus();
+  }
+  updateTOTPBtn();
+  // Auto-submit ao preencher o 6º dígito
+  if (idx === 5 && getTOTPCode().length === 6) {
+    setTimeout(handleTOTPVerify, 120);
+  }
+}
+
+function digitKeyDown(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    const prev = document.getElementById('td' + (idx - 1));
+    prev.value = '';
+    prev.classList.remove('filled');
+    prev.focus();
+    updateTOTPBtn();
+  }
+  if (e.key === 'Enter') handleTOTPVerify();
+  // Permite paste no primeiro campo
+  if (e.ctrlKey && e.key === 'v' && idx === 0) {
+    setTimeout(() => {
+      const pasted = (e.target.value || '').replace(/\D/g, '').slice(0, 6);
+      if (pasted.length === 6) {
+        [...pasted].forEach((d, i) => {
+          const inp = document.getElementById('td' + i);
+          inp.value = d;
+          inp.classList.add('filled');
+        });
+        updateTOTPBtn();
+        setTimeout(handleTOTPVerify, 120);
+      }
+    }, 50);
+  }
+}
+
+function getTOTPCode() {
+  return [0,1,2,3,4,5].map(i => document.getElementById('td'+i).value.replace(/\D/g,'')).join('');
+}
+
+function updateTOTPBtn() {
+  const btn = document.getElementById('btn-totp');
+  if (!btn) return;
+  btn.disabled = getTOTPCode().length !== 6;
+}
+
+function clearDigits() {
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('td' + i);
+    el.value = '';
+    el.classList.remove('filled', 'error-shake');
+  }
+  updateTOTPBtn();
+}
+
+function shakeDigits() {
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('td' + i);
+    el.classList.add('error-shake');
+    setTimeout(() => el.classList.remove('error-shake'), 500);
+  }
+}
+
+/* ── QR CODE SETUP ──────────────────────────────────────────── */
+let _qrGenerated = false;
+
+function buildOTPAuthURI(secret, email) {
+  const label  = encodeURIComponent('Portal Chesterton:' + email);
+  const issuer = encodeURIComponent('Chesterton do Brasil');
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+}
+
+function renderQRCode(secret, email) {
+  if (_qrGenerated) return;
+  _qrGenerated = true;
+  const container = document.getElementById('qrcode-canvas');
+  container.innerHTML = '';
+  try {
+    new QRCode(container, {
+      text  : buildOTPAuthURI(secret, email),
+      width : 176, height: 176,
+      colorDark : '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    container.innerHTML = '<p style="color:var(--accent-red);font-size:0.75rem">Erro ao gerar QR Code. Use a chave manual.</p>';
+  }
+  // Exibir chave formatada em grupos de 4
+  const disp = document.getElementById('totp-secret-display');
+  if (disp) {
+    disp.textContent = (secret.match(/.{1,4}/g) || []).join(' ');
+    disp.dataset.raw = secret;
+  }
+}
+
+function toggleQRSetup() {
+  const panel  = document.getElementById('totp-qr-panel');
+  const toggle = document.getElementById('totp-setup-toggle');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+
+  // Gerar QR Code ao abrir pela primeira vez
+  if (!isOpen && S.pendingTOTPSecret && S.pendingEmail) {
+    renderQRCode(S.pendingTOTPSecret, S.pendingEmail);
+  }
+}
+
+function copySecret() {
+  const el = document.getElementById('totp-secret-display');
+  if (!el) return;
+  const raw = el.dataset.raw || el.textContent.replace(/\s/g, '');
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    if (btn) { btn.textContent = '✅ Copiado!'; setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000); }
+  }).catch(() => {
+    prompt('Copie a chave secreta:', raw);
+  });
+}
+
+/* ── STEP NAVIGATION ────────────────────────────────────────── */
+function showStep2(email, totpSecret) {
+  S.pendingEmail       = email;
+  S.pendingTOTPSecret  = totpSecret;
+  _qrGenerated = false;
+
+  document.getElementById('step-1').style.display = 'none';
+  document.getElementById('step-2').style.display = 'block';
+  document.getElementById('status-totp-error').style.display  = 'none';
+  document.getElementById('status-totp-loading').style.display = 'none';
+
+  // Fechar painel QR se estava aberto
+  document.getElementById('totp-qr-panel').classList.remove('open');
+  document.getElementById('totp-setup-toggle').classList.remove('open');
+
+  clearDigits();
+  startTOTPTimer();
+
+  // Focar no primeiro dígito após pequeno delay (UX)
+  setTimeout(() => { document.getElementById('td0').focus(); }, 200);
+}
+
+function backToStep1() {
+  stopTOTPTimer();
+  S.pendingEmail      = null;
+  S.pendingTOTPSecret = null;
+  document.getElementById('step-2').style.display = 'none';
+  document.getElementById('step-1').style.display = 'block';
+  document.getElementById('status-error').style.display = 'none';
+}
+
 /* ── LOGIN ───────────────────────────────────────────────────── */
 async function handleLogin() {
   const email = (document.getElementById('inp-email').value || '').trim();
@@ -862,7 +1420,19 @@ async function handleLogin() {
 
     if (match) {
       S.user = match;
-      onLoginSuccess(email);
+      // ── 2FA: verificar se o usuário tem TOTP_SECRET na planilha ──
+      const totpSecret = (
+        match['TOTP_SECRET'] || match['totp_secret'] ||
+        match['TOTP'] || match['totp'] || ''
+      ).trim().replace(/\s/g, '');
+
+      if (totpSecret) {
+        // Avançar para Etapa 2
+        showStep2(email, totpSecret);
+      } else {
+        // Sem 2FA configurado — acesso direto (retrocompatível)
+        onLoginSuccess(email);
+      }
     } else {
       errEl.textContent = '⚠️ E-mail ou senha incorretos. Verifique suas credenciais.';
       errEl.style.display = 'block';
@@ -874,6 +1444,45 @@ async function handleLogin() {
   } finally {
     btnEl.disabled = false;
     loadEl.style.display = 'none';
+  }
+}
+
+/* ── TOTP VERIFY (Etapa 2) ───────────────────────────────────── */
+async function handleTOTPVerify() {
+  const code    = getTOTPCode();
+  const btnEl   = document.getElementById('btn-totp');
+  const loadEl  = document.getElementById('status-totp-loading');
+  const errEl   = document.getElementById('status-totp-error');
+
+  if (code.length !== 6) return;
+
+  errEl.style.display  = 'none';
+  loadEl.style.display = '';
+  loadEl.classList.add('loading');
+  btnEl.disabled = true;
+
+  try {
+    const valid = await verifyTOTP(S.pendingTOTPSecret, code);
+    if (valid) {
+      stopTOTPTimer();
+      onLoginSuccess(S.pendingEmail);
+    } else {
+      shakeDigits();
+      errEl.textContent = '⚠️ Código inválido ou expirado. Aguarde o próximo código e tente novamente.';
+      errEl.style.display = 'block';
+      // Limpar dígitos e focar no primeiro para nova tentativa
+      setTimeout(() => {
+        clearDigits();
+        document.getElementById('td0').focus();
+      }, 600);
+    }
+  } catch(e) {
+    console.error(e);
+    errEl.textContent = '⚠️ Erro ao verificar código. Tente novamente.';
+    errEl.style.display = 'block';
+  } finally {
+    loadEl.style.display = 'none';
+    btnEl.disabled = getTOTPCode().length !== 6;
   }
 }
 
@@ -897,7 +1506,16 @@ function onLoginSuccess(email) {
 
 function handleLogout() {
   if (S.timer) { clearInterval(S.timer); S.timer = null; }
-  S.user = null;
+  stopTOTPTimer();
+  S.user               = null;
+  S.pendingEmail       = null;
+  S.pendingTOTPSecret  = null;
+  _qrGenerated = false;
+
+  // Garantir que voltamos para o step-1
+  document.getElementById('step-1').style.display = 'block';
+  document.getElementById('step-2').style.display = 'none';
+
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('inp-email').value = '';
@@ -991,8 +1609,34 @@ function renderTable(rows) {
 
 /* ── ENTER KEY ───────────────────────────────────────────────── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+  if (e.key !== 'Enter') return;
+  const loginVisible = document.getElementById('login-screen').style.display !== 'none';
+  if (!loginVisible) return;
+
+  const step2Visible = document.getElementById('step-2').style.display !== 'none';
+  if (step2Visible) {
+    // Enter no step-2 = só verifica se 6 dígitos preenchidos
+    if (getTOTPCode().length === 6) handleTOTPVerify();
+  } else {
     handleLogin();
+  }
+});
+
+/* ── PASTE GLOBAL no step-2 (captura paste de 6 dígitos) ──── */
+document.addEventListener('paste', e => {
+  const step2 = document.getElementById('step-2');
+  if (!step2 || step2.style.display === 'none') return;
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  const digits = text.replace(/\D/g, '').slice(0, 6);
+  if (digits.length === 6) {
+    e.preventDefault();
+    [...digits].forEach((d, i) => {
+      const inp = document.getElementById('td' + i);
+      inp.value = d;
+      inp.classList.add('filled');
+    });
+    updateTOTPBtn();
+    setTimeout(handleTOTPVerify, 120);
   }
 });
 </script>
